@@ -1,3 +1,6 @@
 functions
-bob(x: nat) y: nat
-post true
+neg(x: bool) y: bool
+post x = not y;
+
+andb(x, y: bool) z: bool
+post x and y = z or z 
