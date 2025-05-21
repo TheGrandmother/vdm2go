@@ -1,0 +1,3 @@
+functions
+bob(x: nat) y: nat
+post true

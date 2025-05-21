@@ -1,0 +1,1 @@
+(sl_document (sl_definition_block (sl_function_definitions functions (function_definition (implicit_function_definition bob (parameter_types ( (pattern_type_pair_list (pattern_list (pattern x)) : (type (basic_type nat))) )) (identifier_type_pair_list (identifier_type_pair y : (type (basic_type nat)))) (post_expression post (expression (symbolic_literal true))))))))
