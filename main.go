@@ -7,7 +7,7 @@ import (
 	"github.com/alecthomas/kong"
 	"github.com/alecthomas/participle/v2"
 	"github.com/alecthomas/participle/v2/lexer"
-	"github.com/alecthomas/repr"
+	// "github.com/alecthomas/repr"
 	"go/ast"
 	"go/printer"
 	"go/token"
@@ -104,7 +104,7 @@ func (s *Document) toNode() (error, *ast.File) {
 
 	}
 	return nil, &ast.File{
-		Name:      ast.NewIdent("GeneratedMcGenerationFace"),
+		Name:      ast.NewIdent("main"),
 		Decls:     func_decls,
 		GoVersion: "1.24,3",
 	}
@@ -189,8 +189,11 @@ func (s *ImplicitDefintion) toNode() (error, ast.Decl, ast.Decl) {
 	params := &ast.FieldList{
 		List: args,
 	}
+	return_types := &ast.FieldList{
+		List: returns,
+	}
 
-	err, post_decl := makePostCheck(&s.PostExpr, s.Name, params)
+	err, post_decl := makePostCheck(&s.PostExpr, s.Name, params, return_types)
 	if err != nil {
 		return fmt.Errorf("%v: Failed at making post", err), nil, nil
 	}
@@ -198,17 +201,15 @@ func (s *ImplicitDefintion) toNode() (error, ast.Decl, ast.Decl) {
 	main_decl := &ast.FuncDecl{
 		Name: ast.NewIdent(s.Name),
 		Type: &ast.FuncType{
-			Params: params,
-			Results: &ast.FieldList{
-				List: returns,
-			},
+			Params:  params,
+			Results: return_types,
 		},
 	}
 
 	return nil, main_decl, post_decl
 }
 
-func makePostCheck(s *PostExpr, name string, params *ast.FieldList) (error, *ast.FuncDecl) {
+func makePostCheck(s *PostExpr, name string, params *ast.FieldList, return_types *ast.FieldList) (error, *ast.FuncDecl) {
 	err, return_exp := s.Exp.toNode()
 	if err != nil {
 		return fmt.Errorf("%v: Could not fuck around with thing", err), nil
@@ -216,7 +217,9 @@ func makePostCheck(s *PostExpr, name string, params *ast.FieldList) (error, *ast
 	return nil, &ast.FuncDecl{
 		Name: ast.NewIdent(fmt.Sprintf("POST_%s", name)),
 		Type: &ast.FuncType{
-			Params: params,
+			Params: &ast.FieldList{
+				List: append(params.List, return_types.List...),
+			},
 			Results: &ast.FieldList{
 				List: []*ast.Field{{
 					Names:   []*ast.Ident{},
@@ -289,13 +292,12 @@ func main() {
 		ctx.FatalIfErrorf(err)
 		ast, err := parser.Parse(file, r)
 		r.Close()
-		repr.Println(ast)
+		//repr.Println(ast)
 		var buf bytes.Buffer
 		err, thing := ast.toNode()
 		ctx.FatalIfErrorf(err)
 		printer.Fprint(&buf, token.NewFileSet(), thing)
 		fmt.Println(buf.String())
-		fmt.Println()
 		ctx.FatalIfErrorf(err)
 	}
 }
